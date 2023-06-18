@@ -1,5 +1,5 @@
 {
-    "name": "$B20 (BRC20)",
-    "description": "B20 by ALEX is the dYdX for BRC-20 tokens and other Bitcoin (L1) native assets.",
-    "image": "https://cdn.alexlab.co/logos/B20_Token_round.png"
+  "name": "$b20 (BRC20)",
+  "description": "$b20",
+  "image": "https://token-images.alexlab.co/brc20-db20"
 }
