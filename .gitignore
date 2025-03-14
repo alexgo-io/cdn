@@ -5,3 +5,9 @@ lisa/.DS_Store
 mediakit/.DS_Store
 /lisa
 /mediakit
+
+# OS files
+.DS_Store
+Thumbs.db
+lisa/.DS_Store
+mediakit/.DS_Store
