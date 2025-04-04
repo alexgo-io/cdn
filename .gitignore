@@ -9,5 +9,7 @@ mediakit/.DS_Store
 # OS files
 .DS_Store
 Thumbs.db
+/lisa/.DS_Store
+/mediakit/.DS_Store
 lisa/.DS_Store
 mediakit/.DS_Store
