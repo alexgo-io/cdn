@@ -2,7 +2,7 @@
   "name": "T-SpaceX",
   "symbol": "tSpaceX",
   "description": "T-SpaceX represents a loan position where token holders lend stablecoins to Tessera Issuer Inc or its subsidiaries (Panama), which deploys capital to a Cayman SPC segregated portfolio that acquires and holds SpaceX equity exposures. Tokens provide economic exposure to SpaceX and are redeemable for principal plus interest following divestment of the underlying exposure. This is a loan product, not a security - token holders have no ownership, voting, or dividend rights in SpaceX. By owning and using this token, you accept and agree to be bound by the Terms and Conditions available at https://terms.tessera.pe",
-  "image": "",
+  "image": "https://cdn.tesseralab.co/tessera/tokenicon_T-SpaceX.svg",
   "external_url": "https://www.tessera.pe",
   "attributes": [
     {
