@@ -2,7 +2,7 @@
   "name": "T-Anduril",
   "symbol": "tAnduril",
   "description": "T-Anduril represents a loan participation right which provides economic exposure to Anduril and is redeemable following divestment of the underlying exposure. This is a loan product, not a security - token holders have no ownership, voting, or dividend rights in Anduril. By owning and using this token, you accept and agree to be bound by the Terms and Conditions available at https://terms.tessera.pe",
-  "image": "https://cdn.tesseralab.co/tessera/tokenicon_T-Anduril.svg",
+  "image": "https://cdn.tesseralab.co/tessera/tokenicon_T-Anduril.png",
   "external_url": "https://www.tessera.pe",
   "attributes": [
     {
