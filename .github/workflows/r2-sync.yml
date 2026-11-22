@@ -44,18 +44,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Ubuntu's packaged rclone (1.60) is too old for R2: its first attempt failed
+      # (Not RCLONE_*: rclone reads those as flags.) Ubuntu's packaged rclone (1.60) is too old for R2: its first attempt failed
       # every upload with "NotImplemented" (2026-11-22). Pinned release, checked
       # against the SHA-256 from the release's SHA256SUMS.
       - name: Install rclone
         env:
-          RCLONE_VERSION: v1.75.2
-          RCLONE_SHA256: 349ac8fba6ff65d6247043f1750cdcb518ec5d500ef91463a10d37c0ccdf3702
+          PIN_RCLONE_VERSION: v1.75.2
+          PIN_RCLONE_SHA256: 349ac8fba6ff65d6247043f1750cdcb518ec5d500ef91463a10d37c0ccdf3702
         run: |
           curl -fsSL -o /tmp/rclone.zip \
-            "https://github.com/rclone/rclone/releases/download/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip"
-          echo "${RCLONE_SHA256}  /tmp/rclone.zip" | sha256sum -c -
-          unzip -q -j /tmp/rclone.zip "rclone-${RCLONE_VERSION}-linux-amd64/rclone" -d /tmp/rclone-bin
+            "https://github.com/rclone/rclone/releases/download/${PIN_RCLONE_VERSION}/rclone-${PIN_RCLONE_VERSION}-linux-amd64.zip"
+          echo "${PIN_RCLONE_SHA256}  /tmp/rclone.zip" | sha256sum -c -
+          unzip -q -j /tmp/rclone.zip "rclone-${PIN_RCLONE_VERSION}-linux-amd64/rclone" -d /tmp/rclone-bin
           sudo install -m 0755 /tmp/rclone-bin/rclone /usr/local/bin/rclone
           rclone version
 
