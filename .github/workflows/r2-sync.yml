@@ -1,0 +1,77 @@
+# Publishes this repository to the Cloudflare R2 bucket behind cdn.alexgo.io
+# and cdn.tesseralab.co. See README.md for the one-time Cloudflare setup.
+#
+# push to main     -> rclone sync: upload new and changed files, delete removed ones
+# pull request     -> the same sync with --dry-run, so the log shows what a merge would change
+# manual run       -> a real sync of main (e.g. after setting up a fresh bucket)
+#
+# The job is skipped until the repository variable R2_BUCKET is set, and for
+# pull requests from forks, which get no secrets.
+name: Sync to R2
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # One sync at a time per ref; never cancel a sync halfway through.
+  group: r2-sync-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: >-
+      vars.R2_BUCKET != '' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      # rclone remote "r2", configured from the environment (no config file).
+      RCLONE_CONFIG_R2_TYPE: s3
+      RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      RCLONE_CONFIG_R2_ACL: private
+      # A token scoped to one bucket cannot list or create buckets.
+      RCLONE_CONFIG_R2_NO_CHECK_BUCKET: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install rclone
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q rclone
+          rclone version
+
+      - name: Sync
+        run: |
+          dry_run=()
+          if [ "${{ github.event_name }}" = "pull_request" ]; then dry_run=(--dry-run); fi
+
+          # --checksum: a fresh checkout gives every file a new mtime, so compare
+          #   MD5s instead, or every run would re-upload the whole repository.
+          # --max-delete: a guard against an empty or wrong checkout wiping the
+          #   bucket (token metadata lives here). Raise it for a deliberate
+          #   large clean-up, in the same PR.
+          # Content-Type is set from each file's extension.
+          rclone sync . "r2:${R2_BUCKET}" "${dry_run[@]}" \
+            --checksum \
+            --fast-list \
+            --max-delete 25 \
+            --header-upload "Cache-Control: public, max-age=300" \
+            --exclude "/.git/**" \
+            --exclude "/.github/**" \
+            --exclude "/.gitignore" \
+            --exclude "/README.md" \
+            --exclude ".DS_Store" \
+            --exclude "Thumbs.db" \
+            --stats-one-line \
+            -v
