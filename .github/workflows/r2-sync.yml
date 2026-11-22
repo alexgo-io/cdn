@@ -1,5 +1,5 @@
-# Publishes this repository to the Cloudflare R2 bucket behind cdn.alexgo.io
-# and cdn.tesseralab.co. See README.md for the one-time Cloudflare setup.
+# Publishes this repository to the Cloudflare R2 bucket behind cdn.alexgo.io,
+# cdn.tesseralab.co and cdn.tessera.pe. See README.md for the one-time Cloudflare setup.
 #
 # push to main     -> rclone sync: upload new and changed files, delete removed ones
 # pull request     -> the same sync with --dry-run, so the log shows what a merge would change
@@ -39,16 +39,24 @@ jobs:
       RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       RCLONE_CONFIG_R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-      RCLONE_CONFIG_R2_ACL: private
       # A token scoped to one bucket cannot list or create buckets.
       RCLONE_CONFIG_R2_NO_CHECK_BUCKET: "true"
     steps:
       - uses: actions/checkout@v4
 
+      # Ubuntu's packaged rclone (1.60) is too old for R2: its first attempt failed
+      # every upload with "NotImplemented" (2026-11-22). Pinned release, checked
+      # against the SHA-256 from the release's SHA256SUMS.
       - name: Install rclone
+        env:
+          RCLONE_VERSION: v1.75.2
+          RCLONE_SHA256: 349ac8fba6ff65d6247043f1750cdcb518ec5d500ef91463a10d37c0ccdf3702
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q rclone
+          curl -fsSL -o /tmp/rclone.zip \
+            "https://github.com/rclone/rclone/releases/download/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip"
+          echo "${RCLONE_SHA256}  /tmp/rclone.zip" | sha256sum -c -
+          unzip -q -j /tmp/rclone.zip "rclone-${RCLONE_VERSION}-linux-amd64/rclone" -d /tmp/rclone-bin
+          sudo install -m 0755 /tmp/rclone-bin/rclone /usr/local/bin/rclone
           rclone version
 
       - name: Sync
@@ -58,6 +66,9 @@ jobs:
 
           # --checksum: a fresh checkout gives every file a new mtime, so compare
           #   MD5s instead, or every run would re-upload the whole repository.
+          # --retries 1: fail the run on any error instead of hiding it behind a
+          #   successful retry (rclone skips deletions in an attempt with errors).
+          #   --low-level-retries still retries individual HTTP requests.
           # --max-delete: a guard against an empty or wrong checkout wiping the
           #   bucket (token metadata lives here). Raise it for a deliberate
           #   large clean-up, in the same PR.
@@ -66,6 +77,8 @@ jobs:
             --checksum \
             --fast-list \
             --max-delete 25 \
+            --retries 1 \
+            --low-level-retries 10 \
             --header-upload "Cache-Control: public, max-age=300" \
             --exclude "/.git/**" \
             --exclude "/.github/**" \
