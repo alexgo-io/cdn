@@ -44,9 +44,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # (Not RCLONE_*: rclone reads those as flags.) Ubuntu's packaged rclone (1.60) is too old for R2: its first attempt failed
+      # Ubuntu's packaged rclone (1.60) is too old for R2: its first attempt failed
       # every upload with "NotImplemented" (2026-11-22). Pinned release, checked
-      # against the SHA-256 from the release's SHA256SUMS.
+      # against the SHA-256 from the release's SHA256SUMS. The variables are not
+      # named RCLONE_*: rclone reads those as flags.
       - name: Install rclone
         env:
           PIN_RCLONE_VERSION: v1.75.2
